@@ -1,0 +1,6 @@
+add_subdirectory(CoreMark_spi_master)
+add_subdirectory(CoreMark_w5500_over_ssl)
+add_subdirectory(spi_slave_w5500_over_ssl)
+add_subdirectory(dhcp_dns)
+add_subdirectory(mqtt)
+add_subdirectory(tcp_client_over_ssl)
