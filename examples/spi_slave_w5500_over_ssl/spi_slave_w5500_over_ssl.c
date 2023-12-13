@@ -174,6 +174,7 @@ int main()
     xTaskCreate(recv_task, "RECV_Task", RECV_TASK_STACK_SIZE, NULL, RECV_TASK_PRIORITY, NULL);
     
     send_sem = xSemaphoreCreateCounting((unsigned portBASE_TYPE)0x7fffffff, (unsigned portBASE_TYPE)0);
+    recv_sem = xSemaphoreCreateCounting((unsigned portBASE_TYPE)0x7fffffff, (unsigned portBASE_TYPE)0);
 
     vTaskStartScheduler();
 
@@ -190,6 +191,7 @@ int main()
 /* Task */
 void recv_task(void *argument)
 {
+    xSemaphoreTake(recv_sem, portMAX_DELAY);
     printf("recv task start\n");
 
     while(1)
@@ -301,6 +303,7 @@ void tcp_task(void *argument)
 
     printf(" ok\n    [ Ciphersuite is %s ]\n", mbedtls_ssl_get_ciphersuite(&g_ssl));
 
+     xSemaphoreGive(recv_sem);
     gpio_put(SPI1_STOP_PIN, 1);
 
     while (1)
@@ -457,6 +460,17 @@ void spi1_slave_init(void)
 
 void spi1_slave_read(uint8_t *pBuf, uint16_t len)
 {
+    uint8_t dummy = 0xFF;
+
+    channel_config_set_read_increment(&spi1_dma_channel_config_tx, false);
+    channel_config_set_write_increment(&spi1_dma_channel_config_tx, false);
+
+    dma_channel_configure(spi1_dma_tx, &spi1_dma_channel_config_tx,
+                        &dummy,                      // write address
+                        &spi_get_hw(SPI_PORT)->dr, // read address
+                        1,                       // element count (each element is of size transfer_data_size)
+                        false);                    // don't start yet
+
     channel_config_set_read_increment(&spi1_dma_channel_config_rx, false);
     channel_config_set_write_increment(&spi1_dma_channel_config_rx, true);
 
@@ -467,7 +481,6 @@ void spi1_slave_read(uint8_t *pBuf, uint16_t len)
                         len,                       // element count (each element is of size transfer_data_size)
                         false);                    // don't start yet
 
-    dma_channel_start(spi1_dma_rx);
+    dma_start_channel_mask((1u << spi1_dma_tx) | (1u << spi1_dma_rx));
     dma_channel_wait_for_finish_blocking(spi1_dma_rx);
-
 }

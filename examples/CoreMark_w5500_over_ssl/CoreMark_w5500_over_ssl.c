@@ -284,7 +284,7 @@ void tcp_task(void *argument)
         if(send_cnt >= 0xFFFFFFFF)
             send_cnt = 0;
 
-        vTaskDelay(10);
+        vTaskDelay(5);
     }
 }
 
