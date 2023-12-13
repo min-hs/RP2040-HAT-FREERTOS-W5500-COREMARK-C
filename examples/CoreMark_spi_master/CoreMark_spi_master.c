@@ -39,7 +39,7 @@
 #define PLL_SYS_KHZ (133 * 1000)
 
 /* Buffer */
-#define ETHERNET_BUF_MAX_SIZE (1024 * 2)
+#define ETHERNET_BUF_MAX_SIZE (2048 * 2)
 
 /* SPI 1*/
 #define SPI1_HANDLE spi1
@@ -230,6 +230,8 @@ void spi1_master_init(void)
 
 void spi1_master_write(uint8_t *pBuf, uint16_t len)
 {
+    uint8_t dummy = 0;
+
     channel_config_set_read_increment(&spi1_dma_channel_config_tx, true);
     channel_config_set_write_increment(&spi1_dma_channel_config_tx, false);
 
@@ -239,8 +241,18 @@ void spi1_master_write(uint8_t *pBuf, uint16_t len)
                         len,                       // element count (each element is of size transfer_data_size)
                         false);                    // don't start yet
 
-    dma_channel_start(spi1_dma_tx);
-    dma_channel_wait_for_finish_blocking(spi1_dma_tx);
+    channel_config_set_read_increment(&spi1_dma_channel_config_rx, false);
+    channel_config_set_write_increment(&spi1_dma_channel_config_rx, false);
+
+    dma_channel_configure(
+        spi1_dma_rx, &spi1_dma_channel_config_rx,
+                        &dummy,                      // write address
+                        &spi_get_hw(SPI1_HANDLE)->dr, // read address
+                        1,                       // element count (each element is of size transfer_data_size)
+                        false);                    // don't start yet
+
+    dma_start_channel_mask((1u << spi1_dma_tx) | (1u << spi1_dma_rx));
+    dma_channel_wait_for_finish_blocking(spi1_dma_rx);
 }
 
 static void gpio_callback(uint gpio, uint32_t events)

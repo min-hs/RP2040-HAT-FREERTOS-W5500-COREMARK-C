@@ -50,7 +50,7 @@
 #define PLL_SYS_KHZ (133 * 1000)
 
 /* Buffer */
-#define ETHERNET_BUF_MAX_SIZE (1024 * 2)
+#define ETHERNET_BUF_MAX_SIZE (2048 * 2)
 
 /* Socket */
 #define SOCKET_SSL 2
