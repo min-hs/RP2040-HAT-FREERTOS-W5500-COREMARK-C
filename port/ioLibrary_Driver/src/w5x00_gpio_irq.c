@@ -37,6 +37,7 @@ void wizchip_gpio_interrupt_initialize(uint8_t socket, void (*callback)(void))
     int ret_val;
 
     reg_val = (SIK_CONNECTED | SIK_DISCONNECTED | SIK_RECEIVED | SIK_TIMEOUT); // except SendOK
+    ctlsocket(socket, CS_CLR_INTERRUPT, (void *)&reg_val);
     ret_val = ctlsocket(socket, CS_SET_INTMASK, (void *)&reg_val);
 
 #if (_WIZCHIP_ == W5100S)
